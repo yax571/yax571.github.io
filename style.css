@@ -1,0 +1,344 @@
+/* ===== 全局重置 ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+        sans-serif;
+    background: #f5f6fa;
+    color: #333;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ===== 主布局 ===== */
+.app {
+    display: flex;
+    height: 100vh;
+}
+
+/* ===== 左侧栏 ===== */
+.sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: #fff;
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.sidebar-header {
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.sidebar-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.btn-mark-all {
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-mark-all:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.sidebar-search {
+    padding: 8px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.sidebar-search input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.sidebar-search input:focus {
+    border-color: #4a90d9;
+}
+
+.sidebar-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+/* ===== 分类分组 ===== */
+.category-group {
+    margin-bottom: 4px;
+}
+
+.category-header {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+    transition: background 0.15s;
+}
+
+.category-header:hover {
+    background: #f5f5f5;
+}
+
+.category-header .arrow {
+    font-size: 10px;
+    transition: transform 0.2s;
+    display: inline-block;
+}
+
+.category-header.collapsed .arrow {
+    transform: rotate(-90deg);
+}
+
+.category-items {
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.category-items.collapsed {
+    max-height: 0 !important;
+}
+
+/* ===== 公众号条目 ===== */
+.source-item {
+    padding: 8px 16px 8px 28px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+}
+
+.source-item:hover {
+    background: #f0f4ff;
+}
+
+.source-item.active {
+    background: #e8f0fe;
+    border-left-color: #4a90d9;
+    font-weight: 500;
+}
+
+.source-item .source-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.source-item .badge {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff4444;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.source-item .count {
+    font-size: 11px;
+    color: #999;
+    background: #f0f0f0;
+    padding: 1px 6px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+/* ===== 右侧主区域 ===== */
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 32px;
+}
+
+.welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    color: #999;
+}
+
+.welcome h1 {
+    font-size: 28px;
+    margin-bottom: 12px;
+    color: #666;
+}
+
+.welcome p {
+    font-size: 15px;
+}
+
+.welcome .stats {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #bbb;
+}
+
+/* ===== 文章列表头部 ===== */
+.article-header {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.article-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.article-header .meta {
+    font-size: 13px;
+    color: #999;
+    margin-top: 4px;
+}
+
+/* ===== 文章卡片 ===== */
+.article-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    border: 1px solid #e8e8e8;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.article-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: #d0d0d0;
+}
+
+.article-card.highlighted {
+    border-left: 4px solid #ff9800;
+    background: #fffdf5;
+}
+
+.article-card .article-title {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.article-card .article-title a {
+    color: #1a73e8;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.article-card .article-title a:hover {
+    color: #0d47a1;
+    text-decoration: underline;
+}
+
+.article-card .article-date {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 6px;
+}
+
+.article-card .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.tag.kw {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.tag.ckw {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+/* ===== 加载状态 ===== */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 14px;
+}
+
+/* ===== 滚动条美化 ===== */
+.sidebar-list::-webkit-scrollbar,
+.content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-list::-webkit-scrollbar-track,
+.content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-list::-webkit-scrollbar-thumb,
+.content::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+
+.sidebar-list::-webkit-scrollbar-thumb:hover,
+.content::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+/* ===== 隐藏 (搜索过滤) ===== */
+.hidden {
+    display: none !important;
+}
