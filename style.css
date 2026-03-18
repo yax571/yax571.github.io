@@ -62,6 +62,23 @@ body {
     color: #333;
 }
 
+.btn-hit-all {
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid #f59e0b;
+    border-radius: 4px;
+    background: #fffbeb;
+    color: #b45309;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+}
+
+.btn-hit-all:hover {
+    background: #fef3c7;
+    color: #92400e;
+}
+
 .sidebar-search {
     padding: 8px 16px;
     border-bottom: 1px solid #e0e0e0;
@@ -91,6 +108,28 @@ body {
 /* ===== 分类分组 ===== */
 .category-group {
     margin-bottom: 4px;
+}
+
+/* ===== 置顶分组 ===== */
+.pintop-group {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-bottom: 2px solid #f59e0b;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+}
+
+.pintop-header {
+    color: #b45309 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+}
+
+.pintop-header:hover {
+    background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.pintop-group .source-item:hover {
+    background: rgba(245, 158, 11, 0.08);
 }
 
 .category-header {

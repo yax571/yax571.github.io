@@ -16,12 +16,14 @@
     let allArticles = {};          // 原始数据 { url: articleObj }
     let groupedData = {};          // { category: { source: [articles] } }
     let currentSource = null;      // 当前选中的公众号
+    let pintopSources = [];        // 置顶公众号名称列表（从 pintop.json 加载）
 
     // ===== DOM 引用 =====
     const sidebarList = document.getElementById("sidebarList");
     const content = document.getElementById("content");
     const searchInput = document.getElementById("searchInput");
     const btnMarkAll = document.getElementById("btnMarkAll");
+    const btnHitAll = document.getElementById("btnHitAll");
     const statsEl = document.getElementById("stats");
 
     // ===== localStorage 工具 =====
@@ -75,6 +77,17 @@
             return;
         }
 
+        // 加载置顶公众号配置（失败不影响主流程）
+        try {
+            const pintopResp = await fetch("pintop.json");
+            if (pintopResp.ok) {
+                pintopSources = await pintopResp.json();
+                if (!Array.isArray(pintopSources)) pintopSources = [];
+            }
+        } catch (_) {
+            pintopSources = [];
+        }
+
         // 按 category → source 分组
         groupedData = {};
         let totalArticles = 0;
@@ -105,11 +118,68 @@
         renderSidebar();
     }
 
+    // ===== 收集某个公众号在所有分类下的文章 =====
+    function collectArticles(source) {
+        let articles = [];
+        for (const cat of Object.values(groupedData)) {
+            if (cat[source]) articles = articles.concat(cat[source]);
+        }
+        return articles;
+    }
+
+    // ===== 创建公众号条目 DOM =====
+    function createSourceItem(src, articles) {
+        const item = document.createElement("div");
+        item.className = "source-item";
+        item.dataset.source = src;
+
+        const unread = hasUnread(src, articles);
+        const hitCount = countHitArticles(articles);
+
+        item.innerHTML = `
+            <span class="source-name">
+                ${unread ? '<span class="badge"></span>' : ""}
+                <span class="name-text">${escapeHtml(src)}</span>
+                ${hitCount > 0 ? `<span class="badge-hit">${hitCount}</span>` : ""}
+            </span>
+            <span class="count">${articles.length}</span>
+        `;
+
+        item.addEventListener("click", () => selectSource(src, item));
+        return item;
+    }
+
     // ===== 渲染左侧栏 =====
     function renderSidebar() {
         sidebarList.innerHTML = "";
 
-        // 按 category 名称排序
+        // ---- 置顶分组 ----
+        if (pintopSources.length > 0) {
+            const pintopGroup = document.createElement("div");
+            pintopGroup.className = "category-group pintop-group";
+
+            const pintopHeader = document.createElement("div");
+            pintopHeader.className = "category-header pintop-header";
+            pintopHeader.innerHTML = `<span class="arrow">▼</span> ⭐ 常用置顶`;
+            pintopHeader.addEventListener("click", () => toggleCategory(pintopHeader));
+            pintopGroup.appendChild(pintopHeader);
+
+            const pintopItems = document.createElement("div");
+            pintopItems.className = "category-items";
+
+            for (const src of pintopSources) {
+                const articles = collectArticles(src);
+                if (articles.length === 0) continue; // 数据中不存在该公众号则跳过
+                pintopItems.appendChild(createSourceItem(src, articles));
+            }
+
+            if (pintopItems.children.length > 0) {
+                pintopGroup.appendChild(pintopItems);
+                sidebarList.appendChild(pintopGroup);
+            }
+        }
+
+        // ---- 按 category 名称排序的常规分组 ----
         const categories = Object.keys(groupedData).sort();
 
         for (const cat of categories) {
@@ -133,24 +203,7 @@
             const sortedSources = Object.keys(sources).sort();
             for (const src of sortedSources) {
                 const articles = sources[src];
-                const item = document.createElement("div");
-                item.className = "source-item";
-                item.dataset.source = src;
-
-                const unread = hasUnread(src, articles);
-                const hitCount = countHitArticles(articles);
-
-                item.innerHTML = `
-                    <span class="source-name">
-                        ${unread ? '<span class="badge"></span>' : ""}
-                        <span class="name-text">${escapeHtml(src)}</span>
-                        ${hitCount > 0 ? `<span class="badge-hit">${hitCount}</span>` : ""}
-                    </span>
-                    <span class="count">${articles.length}</span>
-                `;
-
-                item.addEventListener("click", () => selectSource(src, item));
-                itemsContainer.appendChild(item);
+                itemsContainer.appendChild(createSourceItem(src, articles));
             }
 
             group.appendChild(itemsContainer);
@@ -186,12 +239,7 @@
     // ===== 渲染文章列表 =====
     function renderArticles(source) {
         // 收集该公众号在所有分类下的文章
-        let articles = [];
-        for (const cat of Object.values(groupedData)) {
-            if (cat[source]) {
-                articles = articles.concat(cat[source]);
-            }
-        }
+        let articles = collectArticles(source);
 
         // 去重（同一 URL 可能出现在多个分类中，虽然不太可能）
         const seen = new Set();
@@ -251,11 +299,7 @@
     function refreshBadges() {
         document.querySelectorAll(".source-item").forEach(item => {
             const src = item.dataset.source;
-            // 找到该公众号的文章
-            let articles = [];
-            for (const cat of Object.values(groupedData)) {
-                if (cat[src]) articles = articles.concat(cat[src]);
-            }
+            const articles = collectArticles(src);
             const unread = hasUnread(src, articles);
             const existingBadge = item.querySelector(".badge");
             const nameSpan = item.querySelector(".source-name");
@@ -293,6 +337,59 @@
         });
     }
 
+    // ===== 显示所有命中关键词的文章 =====
+    function showAllHitArticles() {
+        // 取消左侧栏选中状态
+        currentSource = null;
+        document.querySelectorAll(".source-item.active").forEach(el => el.classList.remove("active"));
+
+        // 收集所有命中文章
+        let hitArticles = [];
+        for (const [url, article] of Object.entries(allArticles)) {
+            const hasHit = (article.hit_kws && article.hit_kws.length > 0) ||
+                           (article.hit_ckws && article.hit_ckws.length > 0);
+            if (hasHit) {
+                hitArticles.push({ ...article, url });
+            }
+        }
+
+        // 按日期降序
+        hitArticles.sort((a, b) => b.date.localeCompare(a.date));
+
+        if (hitArticles.length === 0) {
+            content.innerHTML = `
+                <div class="welcome">
+                    <h1>🎯 命中文章</h1>
+                    <p>暂无命中关键词的文章</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="article-header">
+                <h2>🎯 命中关键词文章</h2>
+                <div class="meta">${hitArticles.length} 篇文章命中关键词</div>
+            </div>
+        `;
+
+        for (const article of hitArticles) {
+            const tags = buildTags(article);
+            html += `
+                <div class="article-card highlighted">
+                    <div class="article-title">
+                        <a href="${escapeHtml(article.url)}" target="_blank" rel="noopener">${escapeHtml(article.title)}</a>
+                    </div>
+                    <div class="article-date">📅 ${escapeHtml(article.date)} · 📢 ${escapeHtml(article.source || "未知")}</div>
+                    ${tags}
+                </div>
+            `;
+        }
+
+        content.innerHTML = html;
+        content.scrollTop = 0;
+    }
+
     // ===== HTML 转义 =====
     function escapeHtml(str) {
         if (!str) return "";
@@ -304,6 +401,7 @@
     // ===== 事件绑定 =====
     searchInput.addEventListener("input", (e) => filterSources(e.target.value));
     btnMarkAll.addEventListener("click", markAllRead);
+    btnHitAll.addEventListener("click", showAllHitArticles);
 
     // ===== 启动 =====
     loadData();
