@@ -56,6 +56,14 @@
         return articles.some(a => a.date > readTime);
     }
 
+    // ===== 计算公众号下命中关键词的文章数 =====
+    function countHitArticles(articles) {
+        return articles.filter(a =>
+            (a.hit_kws && a.hit_kws.length > 0) ||
+            (a.hit_ckws && a.hit_ckws.length > 0)
+        ).length;
+    }
+
     // ===== 数据加载与分组 =====
     async function loadData() {
         try {
@@ -130,11 +138,13 @@
                 item.dataset.source = src;
 
                 const unread = hasUnread(src, articles);
+                const hitCount = countHitArticles(articles);
 
                 item.innerHTML = `
                     <span class="source-name">
                         ${unread ? '<span class="badge"></span>' : ""}
                         <span class="name-text">${escapeHtml(src)}</span>
+                        ${hitCount > 0 ? `<span class="badge-hit">${hitCount}</span>` : ""}
                     </span>
                     <span class="count">${articles.length}</span>
                 `;

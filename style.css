@@ -178,6 +178,19 @@ body {
     50% { opacity: 0.5; }
 }
 
+.source-item .badge-hit {
+    display: inline-block;
+    font-size: 10px;
+    color: #fff;
+    background: #22c55e;
+    padding: 0 5px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    margin-left: 4px;
+    line-height: 16px;
+    font-weight: 600;
+}
+
 .source-item .count {
     font-size: 11px;
     color: #999;
