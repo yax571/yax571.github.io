@@ -18,7 +18,124 @@ body {
 /* ===== 主布局 ===== */
 .app {
     display: flex;
+    flex-direction: column;
     height: 100vh;
+}
+
+/* ===== 顶部页签栏 ===== */
+.tab-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    background: #fff;
+    border-bottom: 2px solid #e0e0e0;
+    flex-shrink: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tab-bar::-webkit-scrollbar {
+    height: 3px;
+}
+
+.tab-bar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tab-bar::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 2px;
+}
+
+.tab-bar .tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    background: #fff;
+    color: #666;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+.tab-bar .tab:hover {
+    background: #f0f4ff;
+    border-color: #b0c4de;
+    color: #333;
+}
+
+.tab-bar .tab.active {
+    background: #1a73e8;
+    border-color: #1a73e8;
+    color: #fff;
+    font-weight: 600;
+}
+
+.tab-bar .tab.active .tab-count {
+    background: rgba(255, 255, 255, 0.3);
+    color: #fff;
+}
+
+.tab-bar .tab-count {
+    display: inline-block;
+    font-size: 11px;
+    background: #f0f0f0;
+    color: #666;
+    padding: 0 6px;
+    border-radius: 10px;
+    line-height: 18px;
+    font-weight: 600;
+}
+
+/* 关键词页签 - 标题关键词 */
+.tab-bar .tab.tab-kw {
+    border-color: #bbdefb;
+    color: #1565c0;
+}
+
+.tab-bar .tab.tab-kw:hover {
+    background: #e3f2fd;
+}
+
+.tab-bar .tab.tab-kw.active {
+    background: #1565c0;
+    border-color: #1565c0;
+    color: #fff;
+}
+
+/* 关键词页签 - 内容关键词 */
+.tab-bar .tab.tab-ckw {
+    border-color: #e1bee7;
+    color: #7b1fa2;
+}
+
+.tab-bar .tab.tab-ckw:hover {
+    background: #f3e5f5;
+}
+
+.tab-bar .tab.tab-ckw.active {
+    background: #7b1fa2;
+    border-color: #7b1fa2;
+    color: #fff;
+}
+
+/* ===== 主体区域 ===== */
+.app-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+/* 命中模式：隐藏侧栏 */
+.app-body.hit-mode .sidebar {
+    display: none;
 }
 
 /* ===== 左侧栏 ===== */
@@ -29,7 +146,7 @@ body {
     border-right: 1px solid #e0e0e0;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100%;
 }
 
 .sidebar-header {
@@ -60,23 +177,6 @@ body {
 .btn-mark-all:hover {
     background: #f0f0f0;
     color: #333;
-}
-
-.btn-hit-all {
-    font-size: 12px;
-    padding: 4px 10px;
-    border: 1px solid #f59e0b;
-    border-radius: 4px;
-    background: #fffbeb;
-    color: #b45309;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 600;
-}
-
-.btn-hit-all:hover {
-    background: #fef3c7;
-    color: #92400e;
 }
 
 .sidebar-search {
@@ -241,6 +341,58 @@ body {
 }
 
 /* ===== 右侧主区域 ===== */
+.content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+}
+
+/* ===== 右侧搜索栏 ===== */
+.content-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 24px;
+    background: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    flex-shrink: 0;
+}
+
+.content-search input {
+    flex: 1;
+    padding: 8px 14px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.content-search input:focus {
+    border-color: #4a90d9;
+    box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.1);
+}
+
+.btn-clear-search {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    color: #999;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.btn-clear-search:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+/* ===== 文章内容区 ===== */
 .content {
     flex: 1;
     overflow-y: auto;
@@ -351,13 +503,15 @@ body {
 }
 
 .tag.kw {
-    background: #e3f2fd;
-    color: #1565c0;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
 }
 
 .tag.ckw {
-    background: #f3e5f5;
-    color: #7b1fa2;
+    background: #fff8e1;
+    color: #e65100;
+    border: 1px solid #ffb300;
 }
 
 /* ===== 加载状态 ===== */

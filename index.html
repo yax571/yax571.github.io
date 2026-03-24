@@ -8,30 +8,45 @@
 </head>
 <body>
     <div class="app">
-        <!-- 左侧栏 -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h2>📰 公众号列表</h2>
-                <button class="btn-hit-all" id="btnHitAll" title="查看所有命中关键词的文章">🎯 命中</button>
-                <button class="btn-mark-all" id="btnMarkAll" title="全部标记已读">✓ 全部已读</button>
-            </div>
-            <div class="sidebar-search">
-                <input type="text" id="searchInput" placeholder="搜索公众号..." />
-            </div>
-            <div class="sidebar-list" id="sidebarList">
-                <!-- 由 JS 动态生成 -->
-                <div class="loading">加载中...</div>
-            </div>
-        </aside>
+        <!-- 顶部页签栏 -->
+        <nav class="tab-bar" id="tabBar">
+            <button class="tab active" data-tab="all">📰 全部文章</button>
+            <button class="tab" data-tab="hit-all">🎯 全部命中 <span class="tab-count" id="hitAllCount">0</span></button>
+            <!-- 关键词页签由 JS 动态生成 -->
+        </nav>
 
-        <!-- 右侧主区域 -->
-        <main class="content" id="content">
-            <div class="welcome">
-                <h1>📖 公众号文章阅读器</h1>
-                <p>点击左侧公众号查看文章列表</p>
-                <p class="stats" id="stats"></p>
-            </div>
-        </main>
+        <!-- 主体区域 -->
+        <div class="app-body">
+            <!-- 左侧栏 -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h2>📰 公众号列表</h2>
+                    <button class="btn-mark-all" id="btnMarkAll" title="全部标记已读">✓ 全部已读</button>
+                </div>
+                <div class="sidebar-search">
+                    <input type="text" id="searchInput" placeholder="搜索公众号..." />
+                </div>
+                <div class="sidebar-list" id="sidebarList">
+                    <!-- 由 JS 动态生成 -->
+                    <div class="loading">加载中...</div>
+                </div>
+            </aside>
+
+            <!-- 右侧主区域 -->
+            <main class="content-wrapper">
+                <div class="content-search" id="contentSearch">
+                    <input type="text" id="articleSearchInput" placeholder="🔍 搜索文章标题 / 关键词..." />
+                    <button class="btn-clear-search" id="btnClearSearch" title="清除搜索">✕</button>
+                </div>
+                <div class="content" id="content">
+                    <div class="welcome">
+                        <h1>📖 公众号文章阅读器</h1>
+                        <p>点击左侧公众号查看文章列表</p>
+                        <p class="stats" id="stats"></p>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
 
     <script src="app.js"></script>

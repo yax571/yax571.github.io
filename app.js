@@ -6,7 +6,9 @@
  * - 左侧栏展示公众号列表（可折叠分类）
  * - 点击公众号显示文章列表
  * - localStorage 记录已读时间，未读公众号显示红标
- * - 搜索过滤公众号
+ * - 搜索过滤公众号（左侧栏）
+ * - 顶部页签栏：全部文章 / 全部命中 / 按关键词过滤
+ * - 右侧搜索栏：搜索文章标题 / 关键词
  */
 
 (function () {
@@ -16,14 +18,20 @@
     let allArticles = {};          // 原始数据 { url: articleObj }
     let groupedData = {};          // { category: { source: [articles] } }
     let currentSource = null;      // 当前选中的公众号
+    let currentTab = "all";        // 当前激活的页签: "all" | "hit-all" | "kw:xxx" | "ckw:xxx"
     let pintopSources = [];        // 置顶公众号名称列表（从 pintop.json 加载）
+    let allKeywordStats = {};      // { keyword: { type: "kw"|"ckw", count: N } }
 
     // ===== DOM 引用 =====
+    const tabBar = document.getElementById("tabBar");
+    const hitAllCount = document.getElementById("hitAllCount");
+    const appBody = document.querySelector(".app-body");
     const sidebarList = document.getElementById("sidebarList");
     const content = document.getElementById("content");
     const searchInput = document.getElementById("searchInput");
+    const articleSearchInput = document.getElementById("articleSearchInput");
+    const btnClearSearch = document.getElementById("btnClearSearch");
     const btnMarkAll = document.getElementById("btnMarkAll");
-    const btnHitAll = document.getElementById("btnHitAll");
     const statsEl = document.getElementById("stats");
 
     // ===== localStorage 工具 =====
@@ -35,7 +43,6 @@
     }
 
     function setReadTime(source) {
-        // 存储为 YYYY-MM-DD 格式，与文章日期格式一致，方便比较
         const now = new Date();
         const dateStr = now.toISOString().slice(0, 10);
         localStorage.setItem(READ_TIME_PREFIX + source, dateStr);
@@ -47,14 +54,13 @@
                 setReadTime(source);
             }
         }
-        // 刷新左侧栏红标
         refreshBadges();
     }
 
     // ===== 判断公众号是否有未读文章 =====
     function hasUnread(source, articles) {
         const readTime = getReadTime(source);
-        if (!readTime) return true; // 从未阅读过
+        if (!readTime) return true;
         return articles.some(a => a.date > readTime);
     }
 
@@ -64,6 +70,118 @@
             (a.hit_kws && a.hit_kws.length > 0) ||
             (a.hit_ckws && a.hit_ckws.length > 0)
         ).length;
+    }
+
+    // ===== 提取所有关键词及统计 =====
+    function extractKeywords() {
+        const kwMap = {};  // { keyword: { type, count } }
+
+        for (const article of Object.values(allArticles)) {
+            if (article.hit_kws) {
+                for (const kw of article.hit_kws) {
+                    if (!kwMap[kw]) kwMap[kw] = { type: "kw", count: 0 };
+                    kwMap[kw].count++;
+                }
+            }
+            if (article.hit_ckws) {
+                for (const ckw of article.hit_ckws) {
+                    if (!kwMap[ckw]) kwMap[ckw] = { type: "ckw", count: 0 };
+                    // 如果同一个词既在 hit_kws 又在 hit_ckws，保持 ckw 类型
+                    if (kwMap[ckw].type === "kw") kwMap[ckw].type = "ckw";
+                    kwMap[ckw].count++;
+                }
+            }
+        }
+
+        allKeywordStats = kwMap;
+        return kwMap;
+    }
+
+    // ===== 渲染顶部页签栏 =====
+    function renderTabBar() {
+        // 计算全部命中数
+        let hitAllTotal = 0;
+        for (const article of Object.values(allArticles)) {
+            if ((article.hit_kws && article.hit_kws.length > 0) ||
+                (article.hit_ckws && article.hit_ckws.length > 0)) {
+                hitAllTotal++;
+            }
+        }
+        hitAllCount.textContent = hitAllTotal;
+
+        // 移除已有的动态关键词页签
+        tabBar.querySelectorAll(".tab-dynamic").forEach(el => el.remove());
+
+        // 按命中数降序排列关键词
+        const sorted = Object.entries(allKeywordStats)
+            .sort((a, b) => b[1].count - a[1].count);
+
+        for (const [keyword, info] of sorted) {
+            const btn = document.createElement("button");
+            const typeClass = info.type === "ckw" ? "tab-ckw" : "tab-kw";
+            btn.className = `tab tab-dynamic ${typeClass}`;
+            btn.dataset.tab = `${info.type}:${keyword}`;
+            btn.innerHTML = `${escapeHtml(keyword)} <span class="tab-count">${info.count}</span>`;
+            btn.addEventListener("click", () => switchTab(btn.dataset.tab, btn));
+            tabBar.appendChild(btn);
+        }
+    }
+
+    // ===== 页签切换 =====
+    function switchTab(tabId, btnEl) {
+        currentTab = tabId;
+
+        // 更新页签激活状态
+        tabBar.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        if (btnEl) {
+            btnEl.classList.add("active");
+        }
+
+        // 清空文章搜索框
+        articleSearchInput.value = "";
+
+        if (tabId === "all") {
+            // 全部文章模式：显示左侧栏
+            appBody.classList.remove("hit-mode");
+            // 如果之前选中了公众号，恢复显示
+            if (currentSource) {
+                renderArticles(currentSource);
+            } else {
+                showWelcome();
+            }
+        } else {
+            // 命中/关键词模式：隐藏左侧栏
+            appBody.classList.add("hit-mode");
+            currentSource = null;
+            document.querySelectorAll(".source-item.active").forEach(el => el.classList.remove("active"));
+
+            if (tabId === "hit-all") {
+                showHitArticles(null);
+            } else {
+                // tabId 格式: "kw:关键词" 或 "ckw:关键词"
+                const colonIdx = tabId.indexOf(":");
+                const kwType = tabId.substring(0, colonIdx);
+                const keyword = tabId.substring(colonIdx + 1);
+                showHitArticles(keyword, kwType);
+            }
+        }
+    }
+
+    // ===== 显示欢迎页 =====
+    function showWelcome() {
+        const sourceSet = new Set();
+        let totalArticles = 0;
+        for (const article of Object.values(allArticles)) {
+            sourceSet.add(article.source || "未知");
+            totalArticles++;
+        }
+        content.innerHTML = `
+            <div class="welcome">
+                <h1>📖 公众号文章阅读器</h1>
+                <p>点击左侧公众号查看文章列表</p>
+                <p class="stats">${sourceSet.size} 个公众号，${totalArticles} 篇文章</p>
+            </div>
+        `;
     }
 
     // ===== 数据加载与分组 =====
@@ -77,7 +195,7 @@
             return;
         }
 
-        // 加载置顶公众号配置（失败不影响主流程）
+        // 加载置顶公众号配置
         try {
             const pintopResp = await fetch("pintop.json");
             if (pintopResp.ok) {
@@ -114,6 +232,10 @@
         if (statsEl) {
             statsEl.textContent = `共 ${sourceSet.size} 个公众号，${totalArticles} 篇文章`;
         }
+
+        // 提取关键词并渲染页签栏
+        extractKeywords();
+        renderTabBar();
 
         renderSidebar();
     }
@@ -169,7 +291,7 @@
 
             for (const src of pintopSources) {
                 const articles = collectArticles(src);
-                if (articles.length === 0) continue; // 数据中不存在该公众号则跳过
+                if (articles.length === 0) continue;
                 pintopItems.appendChild(createSourceItem(src, articles));
             }
 
@@ -188,18 +310,15 @@
             group.className = "category-group";
             group.dataset.category = cat;
 
-            // 分类头
             const header = document.createElement("div");
             header.className = "category-header";
             header.innerHTML = `<span class="arrow">▼</span> ${escapeHtml(cat)}`;
             header.addEventListener("click", () => toggleCategory(header));
             group.appendChild(header);
 
-            // 公众号列表容器
             const itemsContainer = document.createElement("div");
             itemsContainer.className = "category-items";
 
-            // 按公众号名称排序
             const sortedSources = Object.keys(sources).sort();
             for (const src of sortedSources) {
                 const articles = sources[src];
@@ -220,28 +339,34 @@
 
     // ===== 选中公众号 =====
     function selectSource(source, itemEl) {
-        // 更新选中状态
+        // 切换到全部文章模式
+        if (currentTab !== "all") {
+            currentTab = "all";
+            tabBar.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            tabBar.querySelector('[data-tab="all"]').classList.add("active");
+            appBody.classList.remove("hit-mode");
+        }
+
         currentSource = source;
         document.querySelectorAll(".source-item.active").forEach(el => el.classList.remove("active"));
         itemEl.classList.add("active");
 
-        // 记录已读时间
         setReadTime(source);
 
-        // 移除红标
         const badge = itemEl.querySelector(".badge");
         if (badge) badge.remove();
 
-        // 渲染文章列表
+        // 清空文章搜索框
+        articleSearchInput.value = "";
+
         renderArticles(source);
     }
 
-    // ===== 渲染文章列表 =====
+    // ===== 渲染文章列表（公众号模式） =====
     function renderArticles(source) {
-        // 收集该公众号在所有分类下的文章
         let articles = collectArticles(source);
 
-        // 去重（同一 URL 可能出现在多个分类中，虽然不太可能）
+        // 去重
         const seen = new Set();
         articles = articles.filter(a => {
             if (seen.has(a.url)) return false;
@@ -252,6 +377,12 @@
         // 按日期降序
         articles.sort((a, b) => b.date.localeCompare(a.date));
 
+        // 应用文章搜索过滤
+        const searchKw = articleSearchInput.value.trim().toLowerCase();
+        if (searchKw) {
+            articles = filterArticlesBySearch(articles, searchKw);
+        }
+
         let html = `
             <div class="article-header">
                 <h2>${escapeHtml(source)}</h2>
@@ -260,22 +391,104 @@
         `;
 
         for (const article of articles) {
-            const isHighlighted = article.highlighted ? " highlighted" : "";
-            const tags = buildTags(article);
-
-            html += `
-                <div class="article-card${isHighlighted}">
-                    <div class="article-title">
-                        <a href="${escapeHtml(article.url)}" target="_blank" rel="noopener">${escapeHtml(article.title)}</a>
-                    </div>
-                    <div class="article-date">📅 ${escapeHtml(article.date)}</div>
-                    ${tags}
-                </div>
-            `;
+            html += renderArticleCard(article, false);
         }
 
         content.innerHTML = html;
         content.scrollTop = 0;
+    }
+
+    // ===== 显示命中文章（全部命中 / 按关键词过滤） =====
+    function showHitArticles(keyword, kwType) {
+        let hitArticles = [];
+
+        for (const [url, article] of Object.entries(allArticles)) {
+            let matched = false;
+
+            if (keyword === null) {
+                // 全部命中
+                matched = (article.hit_kws && article.hit_kws.length > 0) ||
+                          (article.hit_ckws && article.hit_ckws.length > 0);
+            } else {
+                // 按关键词过滤
+                if (kwType === "kw" && article.hit_kws && article.hit_kws.includes(keyword)) {
+                    matched = true;
+                }
+                if (kwType === "ckw" && article.hit_ckws && article.hit_ckws.includes(keyword)) {
+                    matched = true;
+                }
+                // 如果关键词同时出现在 hit_kws 和 hit_ckws 中，都匹配
+                if (!matched && article.hit_kws && article.hit_kws.includes(keyword)) {
+                    matched = true;
+                }
+                if (!matched && article.hit_ckws && article.hit_ckws.includes(keyword)) {
+                    matched = true;
+                }
+            }
+
+            if (matched) {
+                hitArticles.push({ ...article, url });
+            }
+        }
+
+        // 按日期降序
+        hitArticles.sort((a, b) => b.date.localeCompare(a.date));
+
+        // 应用文章搜索过滤
+        const searchKw = articleSearchInput.value.trim().toLowerCase();
+        if (searchKw) {
+            hitArticles = filterArticlesBySearch(hitArticles, searchKw);
+        }
+
+        if (hitArticles.length === 0) {
+            const title = keyword ? `🎯 关键词: ${escapeHtml(keyword)}` : "🎯 命中文章";
+            content.innerHTML = `
+                <div class="welcome">
+                    <h1>${title}</h1>
+                    <p>暂无匹配的文章</p>
+                </div>
+            `;
+            return;
+        }
+
+        const title = keyword ? `🎯 关键词: ${escapeHtml(keyword)}` : "🎯 命中关键词文章";
+        const subtitle = keyword
+            ? `${hitArticles.length} 篇文章命中「${escapeHtml(keyword)}」`
+            : `${hitArticles.length} 篇文章命中关键词`;
+
+        let html = `
+            <div class="article-header">
+                <h2>${title}</h2>
+                <div class="meta">${subtitle}</div>
+            </div>
+        `;
+
+        for (const article of hitArticles) {
+            html += renderArticleCard(article, true);
+        }
+
+        content.innerHTML = html;
+        content.scrollTop = 0;
+    }
+
+    // ===== 渲染单个文章卡片 =====
+    function renderArticleCard(article, showSource) {
+        const isHighlighted = article.highlighted ||
+            (article.hit_kws && article.hit_kws.length > 0) ||
+            (article.hit_ckws && article.hit_ckws.length > 0);
+        const highlightClass = isHighlighted ? " highlighted" : "";
+        const tags = buildTags(article);
+        const sourceInfo = showSource ? ` · 📢 ${escapeHtml(article.source || "未知")}` : "";
+
+        return `
+            <div class="article-card${highlightClass}">
+                <div class="article-title">
+                    <a href="${escapeHtml(article.url)}" target="_blank" rel="noopener">${escapeHtml(article.title)}</a>
+                </div>
+                <div class="article-date">📅 ${escapeHtml(article.date)}${sourceInfo}</div>
+                ${tags}
+            </div>
+        `;
     }
 
     // ===== 构建关键词标签 =====
@@ -293,6 +506,35 @@
         }
         if (tags.length === 0) return "";
         return `<div class="tags">${tags.join("")}</div>`;
+    }
+
+    // ===== 文章搜索过滤 =====
+    function filterArticlesBySearch(articles, searchKw) {
+        return articles.filter(a => {
+            // 搜索标题
+            if (a.title && a.title.toLowerCase().includes(searchKw)) return true;
+            // 搜索标题关键词
+            if (a.hit_kws && a.hit_kws.some(kw => kw.toLowerCase().includes(searchKw))) return true;
+            // 搜索内容关键词
+            if (a.hit_ckws && a.hit_ckws.some(ckw => ckw.toLowerCase().includes(searchKw))) return true;
+            return false;
+        });
+    }
+
+    // ===== 文章搜索输入处理 =====
+    function onArticleSearch() {
+        if (currentTab === "all") {
+            if (currentSource) {
+                renderArticles(currentSource);
+            }
+        } else if (currentTab === "hit-all") {
+            showHitArticles(null);
+        } else {
+            const colonIdx = currentTab.indexOf(":");
+            const kwType = currentTab.substring(0, colonIdx);
+            const keyword = currentTab.substring(colonIdx + 1);
+            showHitArticles(keyword, kwType);
+        }
     }
 
     // ===== 刷新所有红标 =====
@@ -314,7 +556,7 @@
         });
     }
 
-    // ===== 搜索过滤 =====
+    // ===== 搜索过滤公众号（左侧栏） =====
     function filterSources(keyword) {
         const kw = keyword.toLowerCase().trim();
         document.querySelectorAll(".category-group").forEach(group => {
@@ -328,66 +570,12 @@
                     item.classList.add("hidden");
                 }
             });
-            // 如果分类下没有可见的公众号，隐藏整个分类
             if (hasVisible) {
                 group.classList.remove("hidden");
             } else {
                 group.classList.add("hidden");
             }
         });
-    }
-
-    // ===== 显示所有命中关键词的文章 =====
-    function showAllHitArticles() {
-        // 取消左侧栏选中状态
-        currentSource = null;
-        document.querySelectorAll(".source-item.active").forEach(el => el.classList.remove("active"));
-
-        // 收集所有命中文章
-        let hitArticles = [];
-        for (const [url, article] of Object.entries(allArticles)) {
-            const hasHit = (article.hit_kws && article.hit_kws.length > 0) ||
-                           (article.hit_ckws && article.hit_ckws.length > 0);
-            if (hasHit) {
-                hitArticles.push({ ...article, url });
-            }
-        }
-
-        // 按日期降序
-        hitArticles.sort((a, b) => b.date.localeCompare(a.date));
-
-        if (hitArticles.length === 0) {
-            content.innerHTML = `
-                <div class="welcome">
-                    <h1>🎯 命中文章</h1>
-                    <p>暂无命中关键词的文章</p>
-                </div>
-            `;
-            return;
-        }
-
-        let html = `
-            <div class="article-header">
-                <h2>🎯 命中关键词文章</h2>
-                <div class="meta">${hitArticles.length} 篇文章命中关键词</div>
-            </div>
-        `;
-
-        for (const article of hitArticles) {
-            const tags = buildTags(article);
-            html += `
-                <div class="article-card highlighted">
-                    <div class="article-title">
-                        <a href="${escapeHtml(article.url)}" target="_blank" rel="noopener">${escapeHtml(article.title)}</a>
-                    </div>
-                    <div class="article-date">📅 ${escapeHtml(article.date)} · 📢 ${escapeHtml(article.source || "未知")}</div>
-                    ${tags}
-                </div>
-            `;
-        }
-
-        content.innerHTML = html;
-        content.scrollTop = 0;
     }
 
     // ===== HTML 转义 =====
@@ -399,9 +587,29 @@
     }
 
     // ===== 事件绑定 =====
+
+    // 左侧栏搜索
     searchInput.addEventListener("input", (e) => filterSources(e.target.value));
+
+    // 全部已读
     btnMarkAll.addEventListener("click", markAllRead);
-    btnHitAll.addEventListener("click", showAllHitArticles);
+
+    // 顶部页签 - 固定页签
+    tabBar.querySelector('[data-tab="all"]').addEventListener("click", function () {
+        switchTab("all", this);
+    });
+    tabBar.querySelector('[data-tab="hit-all"]').addEventListener("click", function () {
+        switchTab("hit-all", this);
+    });
+
+    // 右侧文章搜索
+    articleSearchInput.addEventListener("input", onArticleSearch);
+
+    // 清除搜索
+    btnClearSearch.addEventListener("click", () => {
+        articleSearchInput.value = "";
+        onArticleSearch();
+    });
 
     // ===== 启动 =====
     loadData();
