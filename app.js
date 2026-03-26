@@ -18,9 +18,37 @@
     let allArticles = {};          // 原始数据 { url: articleObj }
     let groupedData = {};          // { category: { source: [articles] } }
     let currentSource = null;      // 当前选中的公众号
-    let currentTab = "all";        // 当前激活的页签: "all" | "hit-all" | "kw:xxx" | "ckw:xxx"
+    let currentTab = "all";        // 当前激活的页签: "all" | "hit-all" | "cat:xxx" | "kw:xxx" | "ckw:xxx"
     let pintopSources = [];        // 置顶公众号名称列表（从 pintop.json 加载）
-    let allKeywordStats = {};      // { keyword: { type: "kw"|"ckw", count: N } }
+    let allCategoryStats = {};     // { category: { type: "kw"|"ckw"|"mixed", count: N, keywords: Set } }
+    let allKeywordStats = {};      // 保留兼容: { keyword: { type, count } }
+
+    // ===== 辅助: 兼容新旧 hit_kws/hit_ckws 格式 =====
+    // 新格式: [{category: "抄底", keyword: "机会"}, ...]
+    // 旧格式: ["机会", "底部", ...]
+    function _kwItemCategory(item) {
+        return (typeof item === "object" && item !== null) ? (item.category || "") : "";
+    }
+    function _kwItemKeyword(item) {
+        return (typeof item === "object" && item !== null) ? (item.keyword || "") : String(item);
+    }
+    function _articleHasHits(article) {
+        return (article.hit_kws && article.hit_kws.length > 0) ||
+               (article.hit_ckws && article.hit_ckws.length > 0);
+    }
+    function _articleMatchesCategory(article, category) {
+        if (article.hit_kws) {
+            for (const item of article.hit_kws) {
+                if (_kwItemCategory(item) === category) return true;
+            }
+        }
+        if (article.hit_ckws) {
+            for (const item of article.hit_ckws) {
+                if (_kwItemCategory(item) === category) return true;
+            }
+        }
+        return false;
+    }
 
     // ===== DOM 引用 =====
     const tabBar = document.getElementById("tabBar");
@@ -72,38 +100,48 @@
         ).length;
     }
 
-    // ===== 提取所有关键词及统计 =====
+    // ===== 提取所有关键词及统计（按分类分组） =====
     function extractKeywords() {
-        const kwMap = {};  // { keyword: { type, count } }
+        const catMap = {};  // { category: { type: "kw"|"ckw"|"mixed", count: N, keywords: Set } }
 
         for (const article of Object.values(allArticles)) {
+            // 收集本文章命中的所有分类
+            const hitCategories = new Set();
+
             if (article.hit_kws) {
-                for (const kw of article.hit_kws) {
-                    if (!kwMap[kw]) kwMap[kw] = { type: "kw", count: 0 };
-                    kwMap[kw].count++;
+                for (const item of article.hit_kws) {
+                    const cat = _kwItemCategory(item) || "未分类";
+                    hitCategories.add(cat);
+                    if (!catMap[cat]) catMap[cat] = { type: "kw", count: 0, keywords: new Set() };
+                    catMap[cat].keywords.add(_kwItemKeyword(item));
                 }
             }
             if (article.hit_ckws) {
-                for (const ckw of article.hit_ckws) {
-                    if (!kwMap[ckw]) kwMap[ckw] = { type: "ckw", count: 0 };
-                    // 如果同一个词既在 hit_kws 又在 hit_ckws，保持 ckw 类型
-                    if (kwMap[ckw].type === "kw") kwMap[ckw].type = "ckw";
-                    kwMap[ckw].count++;
+                for (const item of article.hit_ckws) {
+                    const cat = _kwItemCategory(item) || "未分类";
+                    hitCategories.add(cat);
+                    if (!catMap[cat]) catMap[cat] = { type: "ckw", count: 0, keywords: new Set() };
+                    if (catMap[cat].type === "kw") catMap[cat].type = "mixed";
+                    catMap[cat].keywords.add(_kwItemKeyword(item));
                 }
+            }
+
+            // 每个分类对该文章只计数一次
+            for (const cat of hitCategories) {
+                catMap[cat].count++;
             }
         }
 
-        allKeywordStats = kwMap;
-        return kwMap;
+        allCategoryStats = catMap;
+        return catMap;
     }
 
-    // ===== 渲染顶部页签栏 =====
+    // ===== 渲染顶部页签栏（按分类分组） =====
     function renderTabBar() {
         // 计算全部命中数
         let hitAllTotal = 0;
         for (const article of Object.values(allArticles)) {
-            if ((article.hit_kws && article.hit_kws.length > 0) ||
-                (article.hit_ckws && article.hit_ckws.length > 0)) {
+            if (_articleHasHits(article)) {
                 hitAllTotal++;
             }
         }
@@ -112,16 +150,18 @@
         // 移除已有的动态关键词页签
         tabBar.querySelectorAll(".tab-dynamic").forEach(el => el.remove());
 
-        // 按命中数降序排列关键词
-        const sorted = Object.entries(allKeywordStats)
+        // 按命中数降序排列分类
+        const sorted = Object.entries(allCategoryStats)
             .sort((a, b) => b[1].count - a[1].count);
 
-        for (const [keyword, info] of sorted) {
+        for (const [category, info] of sorted) {
             const btn = document.createElement("button");
-            const typeClass = info.type === "ckw" ? "tab-ckw" : "tab-kw";
+            const typeClass = info.type === "ckw" ? "tab-ckw" : (info.type === "mixed" ? "tab-ckw" : "tab-kw");
             btn.className = `tab tab-dynamic ${typeClass}`;
-            btn.dataset.tab = `${info.type}:${keyword}`;
-            btn.innerHTML = `${escapeHtml(keyword)} <span class="tab-count">${info.count}</span>`;
+            btn.dataset.tab = `cat:${category}`;
+            const kwList = Array.from(info.keywords).join("、");
+            btn.title = `关键词: ${kwList}`;
+            btn.innerHTML = `${escapeHtml(category)} <span class="tab-count">${info.count}</span>`;
             btn.addEventListener("click", () => switchTab(btn.dataset.tab, btn));
             tabBar.appendChild(btn);
         }
@@ -158,7 +198,7 @@
             if (tabId === "hit-all") {
                 showHitArticles(null);
             } else {
-                // tabId 格式: "kw:关键词" 或 "ckw:关键词"
+                // tabId 格式: "cat:分类名" 或旧格式 "kw:关键词" / "ckw:关键词"
                 const colonIdx = tabId.indexOf(":");
                 const kwType = tabId.substring(0, colonIdx);
                 const keyword = tabId.substring(colonIdx + 1);
@@ -398,7 +438,7 @@
         content.scrollTop = 0;
     }
 
-    // ===== 显示命中文章（全部命中 / 按关键词过滤） =====
+    // ===== 显示命中文章（全部命中 / 按分类或关键词过滤） =====
     function showHitArticles(keyword, kwType) {
         let hitArticles = [];
 
@@ -407,22 +447,21 @@
 
             if (keyword === null) {
                 // 全部命中
-                matched = (article.hit_kws && article.hit_kws.length > 0) ||
-                          (article.hit_ckws && article.hit_ckws.length > 0);
+                matched = _articleHasHits(article);
+            } else if (kwType === "cat") {
+                // 按分类过滤
+                matched = _articleMatchesCategory(article, keyword);
             } else {
-                // 按关键词过滤
-                if (kwType === "kw" && article.hit_kws && article.hit_kws.includes(keyword)) {
-                    matched = true;
+                // 旧格式兼容：按关键词过滤 (kw / ckw)
+                if (article.hit_kws) {
+                    for (const item of article.hit_kws) {
+                        if (_kwItemKeyword(item) === keyword) { matched = true; break; }
+                    }
                 }
-                if (kwType === "ckw" && article.hit_ckws && article.hit_ckws.includes(keyword)) {
-                    matched = true;
-                }
-                // 如果关键词同时出现在 hit_kws 和 hit_ckws 中，都匹配
-                if (!matched && article.hit_kws && article.hit_kws.includes(keyword)) {
-                    matched = true;
-                }
-                if (!matched && article.hit_ckws && article.hit_ckws.includes(keyword)) {
-                    matched = true;
+                if (!matched && article.hit_ckws) {
+                    for (const item of article.hit_ckws) {
+                        if (_kwItemKeyword(item) === keyword) { matched = true; break; }
+                    }
                 }
             }
 
@@ -441,7 +480,9 @@
         }
 
         if (hitArticles.length === 0) {
-            const title = keyword ? `🎯 关键词: ${escapeHtml(keyword)}` : "🎯 命中文章";
+            const title = keyword
+                ? (kwType === "cat" ? `🏷️ 分类: ${escapeHtml(keyword)}` : `🎯 关键词: ${escapeHtml(keyword)}`)
+                : "🎯 命中文章";
             content.innerHTML = `
                 <div class="welcome">
                     <h1>${title}</h1>
@@ -451,9 +492,13 @@
             return;
         }
 
-        const title = keyword ? `🎯 关键词: ${escapeHtml(keyword)}` : "🎯 命中关键词文章";
+        const title = keyword
+            ? (kwType === "cat" ? `🏷️ 分类: ${escapeHtml(keyword)}` : `🎯 关键词: ${escapeHtml(keyword)}`)
+            : "🎯 命中关键词文章";
         const subtitle = keyword
-            ? `${hitArticles.length} 篇文章命中「${escapeHtml(keyword)}」`
+            ? (kwType === "cat"
+                ? `${hitArticles.length} 篇文章命中分类「${escapeHtml(keyword)}」`
+                : `${hitArticles.length} 篇文章命中「${escapeHtml(keyword)}」`)
             : `${hitArticles.length} 篇文章命中关键词`;
 
         let html = `
@@ -473,9 +518,7 @@
 
     // ===== 渲染单个文章卡片 =====
     function renderArticleCard(article, showSource) {
-        const isHighlighted = article.highlighted ||
-            (article.hit_kws && article.hit_kws.length > 0) ||
-            (article.hit_ckws && article.hit_ckws.length > 0);
+        const isHighlighted = article.highlighted || _articleHasHits(article);
         const highlightClass = isHighlighted ? " highlighted" : "";
         const tags = buildTags(article);
         const sourceInfo = showSource ? ` · 📢 ${escapeHtml(article.source || "未知")}` : "";
@@ -491,32 +534,41 @@
         `;
     }
 
-    // ===== 构建关键词标签 =====
+    // ===== 构建关键词标签（兼容新旧格式） =====
     function buildTags(article) {
         const tags = [];
         if (article.hit_kws && article.hit_kws.length > 0) {
-            for (const kw of article.hit_kws) {
-                tags.push(`<span class="tag kw">标题: ${escapeHtml(kw)}</span>`);
+            for (const item of article.hit_kws) {
+                const kw = _kwItemKeyword(item);
+                const cat = _kwItemCategory(item);
+                const label = cat ? `${cat}/${kw}` : `标题: ${kw}`;
+                tags.push(`<span class="tag kw">${escapeHtml(label)}</span>`);
             }
         }
         if (article.hit_ckws && article.hit_ckws.length > 0) {
-            for (const ckw of article.hit_ckws) {
-                tags.push(`<span class="tag ckw">内容: ${escapeHtml(ckw)}</span>`);
+            for (const item of article.hit_ckws) {
+                const kw = _kwItemKeyword(item);
+                const cat = _kwItemCategory(item);
+                const label = cat ? `${cat}/${kw}` : `内容: ${kw}`;
+                tags.push(`<span class="tag ckw">${escapeHtml(label)}</span>`);
             }
         }
         if (tags.length === 0) return "";
         return `<div class="tags">${tags.join("")}</div>`;
     }
 
-    // ===== 文章搜索过滤 =====
+    // ===== 文章搜索过滤（兼容新旧格式） =====
     function filterArticlesBySearch(articles, searchKw) {
         return articles.filter(a => {
             // 搜索标题
             if (a.title && a.title.toLowerCase().includes(searchKw)) return true;
             // 搜索标题关键词
-            if (a.hit_kws && a.hit_kws.some(kw => kw.toLowerCase().includes(searchKw))) return true;
+            if (a.hit_kws && a.hit_kws.some(item => _kwItemKeyword(item).toLowerCase().includes(searchKw))) return true;
             // 搜索内容关键词
-            if (a.hit_ckws && a.hit_ckws.some(ckw => ckw.toLowerCase().includes(searchKw))) return true;
+            if (a.hit_ckws && a.hit_ckws.some(item => _kwItemKeyword(item).toLowerCase().includes(searchKw))) return true;
+            // 搜索分类名
+            if (a.hit_kws && a.hit_kws.some(item => (_kwItemCategory(item) || "").toLowerCase().includes(searchKw))) return true;
+            if (a.hit_ckws && a.hit_ckws.some(item => (_kwItemCategory(item) || "").toLowerCase().includes(searchKw))) return true;
             return false;
         });
     }
