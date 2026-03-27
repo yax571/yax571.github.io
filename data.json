@@ -1539,18 +1539,36 @@
     "date": "2026-03-26",
     "source": "长安卫公",
     "category": "0.1 抄作业",
-    "highlighted": false,
+    "highlighted": true,
     "hit_kws": [],
-    "hit_ckws": []
+    "hit_ckws": [
+      {
+        "category": "中概",
+        "keyword": "腾讯"
+      },
+      {
+        "category": "中概",
+        "keyword": "美团"
+      }
+    ]
   },
   "https://mp.weixin.qq.com/s/sTTC-kEFgdMeoEH3f3Qb2g": {
     "title": "0325投资内参",
     "date": "2026-03-25",
     "source": "长安卫公",
     "category": "0.1 抄作业",
-    "highlighted": false,
+    "highlighted": true,
     "hit_kws": [],
-    "hit_ckws": []
+    "hit_ckws": [
+      {
+        "category": "中概",
+        "keyword": "阿里"
+      },
+      {
+        "category": "中概",
+        "keyword": "拼多多"
+      }
+    ]
   },
   "https://mp.weixin.qq.com/s/-52TF4RqKqZQFF5lI2i3Zw": {
     "title": "0324投资内参",
