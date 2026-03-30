@@ -548,3 +548,117 @@ body {
 .hidden {
     display: none !important;
 }
+
+/* ===== 上传记录按钮 ===== */
+.tab-bar .tab.tab-runlog {
+    border-color: #a5d6a7;
+    color: #2e7d32;
+    margin-left: auto;
+}
+
+.tab-bar .tab.tab-runlog:hover {
+    background: #e8f5e9;
+}
+
+.tab-bar .tab.tab-runlog.active {
+    background: #2e7d32;
+    border-color: #2e7d32;
+    color: #fff;
+}
+
+/* ===== 运行记录卡片 ===== */
+.runlog-card {
+    background: #fff;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.runlog-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.runlog-header {
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e9 100%);
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.runlog-time {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.runlog-duration {
+    font-size: 13px;
+    font-weight: 400;
+    color: #666;
+    margin-left: 8px;
+}
+
+.runlog-stats {
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.runlog-hits {
+    padding: 12px 20px;
+}
+
+.runlog-cat-group {
+    margin-bottom: 12px;
+}
+
+.runlog-cat-group:last-child {
+    margin-bottom: 0;
+}
+
+.runlog-cat-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1565c0;
+    margin-bottom: 6px;
+    padding: 4px 0;
+}
+
+.runlog-hit-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.runlog-hit-list li {
+    padding: 4px 0 4px 16px;
+    font-size: 13px;
+    color: #555;
+    position: relative;
+    line-height: 1.5;
+}
+
+.runlog-hit-list li::before {
+    content: "•";
+    position: absolute;
+    left: 4px;
+    color: #999;
+}
+
+.runlog-hit-list li a {
+    color: #1a73e8;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.runlog-hit-list li a:hover {
+    color: #0d47a1;
+    text-decoration: underline;
+}
+
+.runlog-no-hits {
+    padding: 12px 20px;
+    font-size: 13px;
+    color: #999;
+}

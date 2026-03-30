@@ -18,10 +18,11 @@
     let allArticles = {};          // 原始数据 { url: articleObj }
     let groupedData = {};          // { category: { source: [articles] } }
     let currentSource = null;      // 当前选中的公众号
-    let currentTab = "all";        // 当前激活的页签: "all" | "hit-all" | "cat:xxx" | "kw:xxx" | "ckw:xxx"
+    let currentTab = "all";        // 当前激活的页签: "all" | "hit-all" | "cat:xxx" | "kw:xxx" | "ckw:xxx" | "runlog"
     let pintopSources = [];        // 置顶公众号名称列表（从 pintop.json 加载）
     let allCategoryStats = {};     // { category: { type: "kw"|"ckw"|"mixed", count: N, keywords: Set } }
     let allKeywordStats = {};      // 保留兼容: { keyword: { type, count } }
+    let runlogData = [];           // 运行日志摘要数据（从 runlog_summary.json 加载）
 
     // ===== 辅助: 兼容新旧 hit_kws/hit_ckws 格式 =====
     // 新格式: [{category: "抄底", keyword: "机会"}, ...]
@@ -60,6 +61,7 @@
     const articleSearchInput = document.getElementById("articleSearchInput");
     const btnClearSearch = document.getElementById("btnClearSearch");
     const btnMarkAll = document.getElementById("btnMarkAll");
+    const btnRunlog = document.getElementById("btnRunlog");
     const statsEl = document.getElementById("stats");
 
     // ===== localStorage 工具 =====
@@ -189,6 +191,12 @@
             } else {
                 showWelcome();
             }
+        } else if (tabId === "runlog") {
+            // 运行记录模式：隐藏左侧栏
+            appBody.classList.add("hit-mode");
+            currentSource = null;
+            document.querySelectorAll(".source-item.active").forEach(el => el.classList.remove("active"));
+            showRunlog();
         } else {
             // 命中/关键词模式：隐藏左侧栏
             appBody.classList.add("hit-mode");
@@ -278,6 +286,17 @@
         renderTabBar();
 
         renderSidebar();
+
+        // 加载运行日志摘要
+        try {
+            const runlogResp = await fetch("runlog_summary.json");
+            if (runlogResp.ok) {
+                runlogData = await runlogResp.json();
+                if (!Array.isArray(runlogData)) runlogData = [];
+            }
+        } catch (_) {
+            runlogData = [];
+        }
     }
 
     // ===== 收集某个公众号在所有分类下的文章 =====
@@ -573,6 +592,98 @@
         });
     }
 
+    // ===== 格式化耗时 =====
+    function formatDuration(seconds) {
+        if (seconds < 60) return `${seconds}秒`;
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        if (m < 60) return s > 0 ? `${m}分${s}秒` : `${m}分`;
+        const h = Math.floor(m / 60);
+        const rm = m % 60;
+        return rm > 0 ? `${h}小时${rm}分` : `${h}小时`;
+    }
+
+    // ===== 显示运行记录 =====
+    function showRunlog() {
+        if (!runlogData || runlogData.length === 0) {
+            content.innerHTML = `
+                <div class="welcome">
+                    <h1>📋 上传记录</h1>
+                    <p>暂无运行记录</p>
+                    <p class="stats">运行 WeChatSpiderCmdV2 后将自动生成记录</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="article-header">
+                <h2>📋 上传记录</h2>
+                <div class="meta">共 ${runlogData.length} 轮运行记录</div>
+            </div>
+        `;
+
+        for (const record of runlogData) {
+            const duration = formatDuration(record.duration_seconds || 0);
+            const hitCount = record.hit_articles ? record.hit_articles.length : 0;
+
+            html += `<div class="runlog-card">`;
+            html += `<div class="runlog-header">`;
+            html += `<div class="runlog-time">📋 ${escapeHtml(record.run_time || "未知时间")}  <span class="runlog-duration">⏱ ${duration}</span></div>`;
+            html += `<div class="runlog-stats">抓取 ${record.sources_crawled || 0} 个公众号 · 新增 ${record.total_new_articles || 0} 篇 · 命中 ${hitCount} 篇</div>`;
+            html += `</div>`;
+
+            if (hitCount > 0) {
+                // 按 category 分组
+                const catGroups = {};
+                for (const article of record.hit_articles) {
+                    const categories = new Set();
+                    if (article.hit_kws) {
+                        for (const item of article.hit_kws) {
+                            categories.add(_kwItemCategory(item) || "未分类");
+                        }
+                    }
+                    if (article.hit_ckws) {
+                        for (const item of article.hit_ckws) {
+                            categories.add(_kwItemCategory(item) || "未分类");
+                        }
+                    }
+                    if (categories.size === 0) categories.add("未分类");
+                    for (const cat of categories) {
+                        if (!catGroups[cat]) catGroups[cat] = [];
+                        catGroups[cat].push(article);
+                    }
+                }
+
+                // 按文章数降序排列分组
+                const sortedCats = Object.entries(catGroups)
+                    .sort((a, b) => b[1].length - a[1].length);
+
+                html += `<div class="runlog-hits">`;
+                for (const [cat, articles] of sortedCats) {
+                    html += `<div class="runlog-cat-group">`;
+                    html += `<div class="runlog-cat-header">🏷️ ${escapeHtml(cat)}（${articles.length}篇）</div>`;
+                    html += `<ul class="runlog-hit-list">`;
+                    for (const a of articles) {
+                        const sourceInfo = a.source ? ` — ${escapeHtml(a.source)}` : "";
+                        const dateInfo = a.date ? ` ${escapeHtml(a.date)}` : "";
+                        html += `<li><a href="${escapeHtml(a.url)}" target="_blank" rel="noopener">${escapeHtml(a.title)}</a>${sourceInfo}${dateInfo}</li>`;
+                    }
+                    html += `</ul>`;
+                    html += `</div>`;
+                }
+                html += `</div>`;
+            } else {
+                html += `<div class="runlog-no-hits">✅ 本轮无命中文章</div>`;
+            }
+
+            html += `</div>`;
+        }
+
+        content.innerHTML = html;
+        content.scrollTop = 0;
+    }
+
     // ===== 文章搜索输入处理 =====
     function onArticleSearch() {
         if (currentTab === "all") {
@@ -653,6 +764,13 @@
     tabBar.querySelector('[data-tab="hit-all"]').addEventListener("click", function () {
         switchTab("hit-all", this);
     });
+
+    // 上传记录按钮
+    if (btnRunlog) {
+        btnRunlog.addEventListener("click", function () {
+            switchTab("runlog", this);
+        });
+    }
 
     // 右侧文章搜索
     articleSearchInput.addEventListener("input", onArticleSearch);
