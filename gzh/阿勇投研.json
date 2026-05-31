@@ -1,0 +1,57 @@
+{
+  "https://mp.weixin.qq.com/s/YprHEPebYD7HM6MgZlFzEQ": {
+    "title": "【行业分析】固态变压器的心脏—高频变压器",
+    "link": "https://mp.weixin.qq.com/s/YprHEPebYD7HM6MgZlFzEQ",
+    "cover": "https://mmbiz.qpic.cn/mmbiz_jpg/icXfAy8ZicysWb3Tib5ItSWCNEYbKfiagyPZZooARYlpo0LROSj4c3LFFeUiaRz4kwuNWYwrjFDMAutUVckG4HqYlMIvMEuV87EBcJeblqr5lzUs/0?wx_fmt=jpeg",
+    "digest": "在SST 架构中，高频隔离变压器位于中压侧功率变换与低压直流输出之间，是连接中压交流输入和800VDC 直流母",
+    "pub_time": 1780199973,
+    "source": "阿勇投研",
+    "category": "0.1 机构电话调研",
+    "hit_kws": [],
+    "fetched_at": "2026-05-31T05:55:00.316Z"
+  },
+  "https://mp.weixin.qq.com/s/OaCKlvi-7HqT9qx4wwqsBQ": {
+    "title": "【行业分析】液冷产业趋势三问",
+    "link": "https://mp.weixin.qq.com/s/OaCKlvi-7HqT9qx4wwqsBQ",
+    "cover": "https://mmbiz.qpic.cn/sz_mmbiz_jpg/icXfAy8ZicysVx8Rt6A1qxNZejGYHgiayEBh54zfoJqX69ZwCAxBmlftRCErmtJXHjt9Wsxk55ickdb7Ox6aTbTiaXaFkCuEU4gF6gToRB07GZAM/0?wx_fmt=jpeg",
+    "digest": "根据最新的行业数据显示，截至2026年Q2，AI训练服务器液冷采用率已达74%，整体AI芯片液冷渗透率首次突破",
+    "pub_time": 1780111797,
+    "source": "阿勇投研",
+    "category": "0.1 机构电话调研",
+    "hit_kws": [],
+    "fetched_at": "2026-05-31T05:55:00.316Z"
+  },
+  "https://mp.weixin.qq.com/s/sBg7ZWDGwiu9ipKKYnKEzw": {
+    "title": "【行业分析】金刚石散热VS液冷散热，替代还是协同？",
+    "link": "https://mp.weixin.qq.com/s/sBg7ZWDGwiu9ipKKYnKEzw",
+    "cover": "https://mmbiz.qpic.cn/mmbiz_jpg/icXfAy8ZicysWJswBJ1Ncv2MP3EovT9J6cDwSrHuHGRz5MeEu950nltBtNVjflm65sL6m7QF7eTkBqde4iaRr5UMbqwO1lDjcfujQnBicGw5L2w/0?wx_fmt=jpeg",
+    "digest": "金刚石散热优势天然单晶金刚石在室温下的热导率高达2000-2200W/(m·K)，这一数值是铜（约400W/(",
+    "pub_time": 1780038844,
+    "source": "阿勇投研",
+    "category": "0.1 机构电话调研",
+    "hit_kws": [],
+    "fetched_at": "2026-05-31T05:55:00.316Z"
+  },
+  "https://mp.weixin.qq.com/s/ggRGBBu-vnWLtxZpGt10iw": {
+    "title": "【行业分析】固态变压器的守门员—固态断路器",
+    "link": "https://mp.weixin.qq.com/s/ggRGBBu-vnWLtxZpGt10iw",
+    "cover": "https://mmbiz.qpic.cn/sz_mmbiz_jpg/icXfAy8ZicysURWlxPdzmKEcia7DuBibHg8h2F862P6OFhQoTmT08XOcuFcKOL9nibOvSKDXPyMOlIibR06FLydLW9BgQ4Za5ibXTs9YOPNic0g5tbw/0?wx_fmt=jpeg",
+    "digest": "常规情况的电路分断是用机械式断路器（毫秒级），依赖机械触点的物理分离切断电路，依靠弹簧或电磁机构驱动。",
+    "pub_time": 1779952141,
+    "source": "阿勇投研",
+    "category": "0.1 机构电话调研",
+    "hit_kws": [],
+    "fetched_at": "2026-05-31T05:55:00.316Z"
+  },
+  "https://mp.weixin.qq.com/s/q35werRwgpBBBHenAl0VxA": {
+    "title": "【公司分析】固态变压器龙头  四方股份",
+    "link": "https://mp.weixin.qq.com/s/q35werRwgpBBBHenAl0VxA",
+    "cover": "https://mmbiz.qpic.cn/mmbiz_jpg/icXfAy8ZicysWzrcRWx5cDxpDibdP89A3ViceypTb4VDVWPtKWjFWVkAJ0vFibteVNseXoszicUAnSY4N8T2DuN44PFEmQojlEIv5qnMH2QTrnckI/0?wx_fmt=jpeg",
+    "digest": "四方股份是国内唯一实现中压大功率SST规模化量产的企业，目前固态变压器业务逐渐有望成为公司继传统继电保护、电网",
+    "pub_time": 1779866438,
+    "source": "阿勇投研",
+    "category": "0.1 机构电话调研",
+    "hit_kws": [],
+    "fetched_at": "2026-05-31T05:55:00.316Z"
+  }
+}

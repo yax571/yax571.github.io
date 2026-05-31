@@ -1,55 +1,49 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>公众号文章阅读器</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>公众号文章阅读器</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app">
-        <!-- 顶部页签栏 -->
-        <nav class="tab-bar" id="tabBar">
-            <button class="tab active" data-tab="all">📰 全部文章</button>
-            <button class="tab" data-tab="hit-all">🎯 全部命中 <span class="tab-count" id="hitAllCount">0</span></button>
-            <button class="tab tab-runlog" id="btnRunlog" title="查看抓取运行记录">📋 上传记录</button>
-            <!-- 关键词页签由 JS 动态生成 -->
-        </nav>
+  <div class="app">
+    <header class="header">
+      <h1>📰 公众号文章阅读器</h1>
+      <div class="header-info">
+        <span id="update-time"></span>
+        <span id="total-stats"></span>
+      </div>
+    </header>
 
-        <!-- 主体区域 -->
-        <div class="app-body">
-            <!-- 左侧栏 -->
-            <aside class="sidebar" id="sidebar">
-                <div class="sidebar-header">
-                    <h2>📰 公众号列表</h2>
-                    <button class="btn-mark-all" id="btnMarkAll" title="全部标记已读">✓ 全部已读</button>
-                </div>
-                <div class="sidebar-search">
-                    <input type="text" id="searchInput" placeholder="搜索公众号..." />
-                </div>
-                <div class="sidebar-list" id="sidebarList">
-                    <!-- 由 JS 动态生成 -->
-                    <div class="loading">加载中...</div>
-                </div>
-            </aside>
-
-            <!-- 右侧主区域 -->
-            <main class="content-wrapper">
-                <div class="content-search" id="contentSearch">
-                    <input type="text" id="articleSearchInput" placeholder="🔍 搜索文章标题 / 关键词..." />
-                    <button class="btn-clear-search" id="btnClearSearch" title="清除搜索">✕</button>
-                </div>
-                <div class="content" id="content">
-                    <div class="welcome">
-                        <h1>📖 公众号文章阅读器</h1>
-                        <p>点击左侧公众号查看文章列表</p>
-                        <p class="stats" id="stats"></p>
-                    </div>
-                </div>
-            </main>
+    <div class="main-container">
+      <!-- 左侧栏 - 公众号列表 -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <input type="text" id="search-input" placeholder="🔍 搜索公众号...">
         </div>
-    </div>
+        <div class="sidebar-tabs">
+          <button class="stab active" data-filter="all">全部</button>
+          <button class="stab" data-filter="hits">有命中</button>
+        </div>
+        <div id="account-list" class="account-list"></div>
+      </aside>
 
-    <script src="app.js"></script>
+      <!-- 右侧主区域 -->
+      <main class="content">
+        <div id="welcome" class="welcome">
+          <h2>📖 点击左侧公众号查看文章</h2>
+          <p id="welcome-stats"></p>
+        </div>
+        <div id="article-header" class="article-header hidden">
+          <h2 id="current-source"></h2>
+          <span id="article-count"></span>
+        </div>
+        <div id="article-list" class="article-list"></div>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>

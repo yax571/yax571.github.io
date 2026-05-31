@@ -1,0 +1,197 @@
+{
+  "updated_at": "2026-05-31T08:05:34.084Z",
+  "accounts": [
+    {
+      "name": "华创金工",
+      "category": "0 择时",
+      "count": 3,
+      "hit_count": 0
+    },
+    {
+      "name": "留富兵法",
+      "category": "0 择时",
+      "count": 5,
+      "hit_count": 0
+    },
+    {
+      "name": "鲁明量化全视角",
+      "category": "0 择时",
+      "count": 5,
+      "hit_count": 0
+    },
+    {
+      "name": "Link量化研究",
+      "category": "0 择时",
+      "count": 3,
+      "hit_count": 0
+    },
+    {
+      "name": "地心共振",
+      "category": "0.1 抄作业",
+      "count": 15,
+      "hit_count": 6
+    },
+    {
+      "name": "黑貔貅俱乐部",
+      "category": "0.1 抄作业",
+      "count": 15,
+      "hit_count": 5
+    },
+    {
+      "name": "洪灝的宏观策略",
+      "category": "0.1 抄作业",
+      "count": 5,
+      "hit_count": 0
+    },
+    {
+      "name": "柯中投研笔记",
+      "category": "0.1 抄作业",
+      "count": 16,
+      "hit_count": 0
+    },
+    {
+      "name": "冷眼局中人",
+      "category": "0.1 抄作业",
+      "count": 15,
+      "hit_count": 1
+    },
+    {
+      "name": "慕陶生",
+      "category": "0.1 抄作业",
+      "count": 8,
+      "hit_count": 1
+    },
+    {
+      "name": "盘盘的投研笔记",
+      "category": "0.1 抄作业",
+      "count": 15,
+      "hit_count": 0
+    },
+    {
+      "name": "斯托伯的天空",
+      "category": "0.1 抄作业",
+      "count": 4,
+      "hit_count": 0
+    },
+    {
+      "name": "投资作业本Pro",
+      "category": "0.1 抄作业",
+      "count": 13,
+      "hit_count": 1
+    },
+    {
+      "name": "微财视界",
+      "category": "0.1 抄作业",
+      "count": 5,
+      "hit_count": 0
+    },
+    {
+      "name": "杨生的记事簿",
+      "category": "0.1 抄作业",
+      "count": 15,
+      "hit_count": 1
+    },
+    {
+      "name": "长安卫公",
+      "category": "0.1 抄作业",
+      "count": 15,
+      "hit_count": 0
+    },
+    {
+      "name": "卓哥投研笔记",
+      "category": "0.1 抄作业",
+      "count": 15,
+      "hit_count": 8
+    },
+    {
+      "name": "HB投资笔记",
+      "category": "0.1 抄作业",
+      "count": 1,
+      "hit_count": 0
+    },
+    {
+      "name": "阿勇投研",
+      "category": "0.1 机构电话调研",
+      "count": 5,
+      "hit_count": 0
+    },
+    {
+      "name": "调研纪要",
+      "category": "0.1 机构电话调研",
+      "count": 5,
+      "hit_count": 0
+    },
+    {
+      "name": "股市调研",
+      "category": "0.1 机构电话调研",
+      "count": 11,
+      "hit_count": 0
+    },
+    {
+      "name": "纪要研报中心",
+      "category": "0.1 机构电话调研",
+      "count": 32,
+      "hit_count": 1
+    },
+    {
+      "name": "价值目录",
+      "category": "0.1 机构电话调研",
+      "count": 9,
+      "hit_count": 0
+    },
+    {
+      "name": "杰柏投研",
+      "category": "0.1 机构电话调研",
+      "count": 5,
+      "hit_count": 0
+    },
+    {
+      "name": "每日调研精选",
+      "category": "0.1 机构电话调研",
+      "count": 32,
+      "hit_count": 1
+    },
+    {
+      "name": "热点投研",
+      "category": "0.1 机构电话调研",
+      "count": 10,
+      "hit_count": 0
+    },
+    {
+      "name": "西线财机",
+      "category": "0.1 机构电话调研",
+      "count": 5,
+      "hit_count": 0
+    },
+    {
+      "name": "小韭菜的成长记录",
+      "category": "0.1 机构电话调研",
+      "count": 13,
+      "hit_count": 0
+    },
+    {
+      "name": "一谈研究",
+      "category": "0.1 机构电话调研",
+      "count": 5,
+      "hit_count": 0
+    },
+    {
+      "name": "硬核调研",
+      "category": "0.1 机构电话调研",
+      "count": 18,
+      "hit_count": 0
+    },
+    {
+      "name": "追龙纪要",
+      "category": "0.1 机构电话调研",
+      "count": 32,
+      "hit_count": 1
+    },
+    {
+      "name": "SEVEN调研纪要",
+      "category": "0.1 机构电话调研",
+      "count": 5,
+      "hit_count": 0
+    }
+  ]
+}
